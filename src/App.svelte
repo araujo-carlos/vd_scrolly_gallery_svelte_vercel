@@ -1,19 +1,18 @@
 <script>
   import Scroller from "@sveltejs/svelte-scroller"
-  import { onMount } from "svelte"
   import * as d3 from "d3"
   /* Importamos componente para video scroll */
   import ScrollyVideo from "scrolly-video/dist/ScrollyVideo.svelte"
 
+  /* Componentes */
   import Medallero from "./components/Medallero.svelte"
   import DebugScroller from "./components/DebugScroller.svelte"
   import Loremipsum from "./components/Loremipsum.svelte"
 
-  /* Variables para la data del medallero */
-  let deportistas = []
-  let filteredDeportistas = []
-
-  /* Variables para el scroller1 */
+  import atletas from "/src/data/atletas.json"
+  
+  /* Variables para Transición animada */
+  let atletasFiltered = atletas
   let count
   let index
   let offset
@@ -21,52 +20,14 @@
   let top = 0.1
   let threshold = 0.5
   let bottom = 0.9
+  /* Fin Transición animada */
 
-  /* Variables para el scroller 2 */
-  let count2
+  /* Variables para Secuencia gráfica */
   let index2
   let offset2
-  let progress2
-  let top2 = 0.1
-  let threshold2 = 0.5
-  let bottom2 = 0.9
-
-  /* Charts */
-  let charts = {
-    0: "lines_01.png",
-    1: "lines_02.png",
-    2: "lines_03.png",
-  }
-
-  onMount(() => {
-    d3.csv("./data/deportistas.csv", d3.autoType).then((data) => {
-      deportistas = data
-      filteredDeportistas = deportistas
-    })
-  })
-
-  $: {
-    // Es un observer que se ejecuta cuando cambia el valor de index
-    switch (index) {
-      case 0:
-        filteredDeportistas = deportistas
-        break
-      case 1:
-        filteredDeportistas = deportistas.filter((d) => d.genero === "F")
-        break
-      case 2:
-        filteredDeportistas = deportistas.filter((d) => d.genero === "M")
-        break
-      case 3:
-        filteredDeportistas = deportistas.filter(
-          (d) => d.continente === "América"
-        )
-        break
-      default:
-        filteredDeportistas = deportistas
-    }
-    console.log(filteredDeportistas)
-  }
+  let charts = ["lines_01.png", "lines_02.png", "lines_03.png"]
+  /* Fin para Secuencia gráfica */
+  
 </script>
 
 <main>
@@ -82,19 +43,10 @@
     </div>
   </div>
 
-  <ScrollyVideo
-    src="https://www.reuters.com/graphics/OLYMPICS-2024/SURFING/akpeoxnyopr/cdn/videos/map.mp4"
-  />
-
-  {#if progress < 1}
-    <DebugScroller
-      index={index}
-      count={count}
-      offset={offset}
-      progress={progress}
-    />
-  {/if}
-  <!-- Primer scroller -->
+  <!--------------------------->
+  <!-- 1. Transición animada -->
+  <!--------------------------->
+  <h2 class="subtitulo">1. Transición animada</h2>
   <Scroller
     top={top}
     threshold={threshold}
@@ -105,52 +57,67 @@
     bind:progress={progress}
   >
     <div slot="background">
-      <Medallero deportistas={filteredDeportistas} />
+      <Medallero deportistas={atletasFiltered} />
     </div>
+    <!-- Epigrafes -->
     <div slot="foreground" class="foreground_container">
       <section class="step_foreground">
         <div class="epi_foreground">
-          <h3>Seccion {index + 1}</h3>
+          <h3>Seccion 0</h3>
           <p>Todos los deportistas</p>
         </div>
       </section>
       <section class="step_foreground">
         <div class="epi_foreground">
-          <h3>Seccion {index + 1}</h3>
+          <h3>Seccion 1</h3>
           <p>Deportistas femeninas</p>
         </div>
       </section>
       <section class="step_foreground">
         <div class="epi_foreground">
-          <h3>Seccion {index + 1}</h3>
+          <h3>Seccion 2</h3>
           <p>Deportistas masculinos</p>
         </div>
       </section>
       <section class="step_foreground">
         <div class="epi_foreground">
-          <h3>Seccion {index + 1}</h3>
+          <h3>Seccion 3</h3>
           <p>Deportistas americanos</p>
         </div>
       </section>
     </div>
   </Scroller>
+  <!---------------------------->
+  <!-- FIN Transición animada -->
+  <!---------------------------->
+
+  {#if progress < 1}
+    <DebugScroller
+      index={index}
+      count={count}
+      offset={offset}
+      progress={progress}
+    />
+  {/if}
 
   <div class="lorem_ipsum">
     <Loremipsum />
   </div>
 
-  <!-- Segundo scroller -->
-  <Scroller
-    top={top2}
-    threshold={threshold2}
-    bottom={bottom2}
-    bind:count={count2}
-    bind:index={index2}
-    bind:offset={offset2}
-    bind:progress={progress2}
-  >
+  <!-------------------------->
+  <!-- 2. Secuencia gráfica -->
+  <!-------------------------->
+  <h2 class="subtitulo">2. Secuencia gráfica</h2>
+  <Scroller bind:index={index2} bind:offset={offset2}>
     <div slot="background" class="image_container">
-      <img src="/images/{charts[index2]}" alt="chart {index2}" class="charts" />
+      {#each charts as chart, i}
+        <img
+          src="/images/{chart}"
+          alt="chart"
+          class="charts"
+          style="opacity: {1 - Math.abs(index2 - i - offset2)};"
+        />
+      {/each}
     </div>
     <div slot="foreground" class="foreground_container">
       <section class="step_foreground">
@@ -173,11 +140,52 @@
       </section>
     </div>
   </Scroller>
-</main>
+  <!--------------------------->
+  <!-- FIN Secuencia gráfica -->
+  <!--------------------------->
 
-<div class="lorem_ipsum">
-  <Loremipsum />
-</div>
+  <div class="lorem_ipsum">
+    <Loremipsum />
+  </div>
+
+  <!--------------------->
+  <!-- 3. Video Scroll -->
+  <!--------------------->
+  <h2 class="subtitulo">3. Video Scroll</h2>
+  <ScrollyVideo
+    src="https://int.nyt.com/newsgraphics/2024/suni/main/move0727finb-1600.mp4"
+  />
+  <div class="foreground_container" style="margin-bottom: 300px;">
+    <section class="step_foreground">
+      <div class="epi_foreground">
+        <h3>Seccion 1</h3>
+        <p>Todos los deportistas</p>
+      </div>
+    </section>
+    <section class="step_foreground">
+      <div class="epi_foreground">
+        <h3>Seccion 2</h3>
+        <p>Deportistas femeninas</p>
+      </div>
+    </section>
+    <section class="step_foreground">
+      <div class="epi_foreground">
+        <h3>Seccion 3</h3>
+        <p>Deportistas masculinos</p>
+      </div>
+    </section>
+    <section class="step_foreground">
+      <div class="epi_foreground">
+        <h3>Seccion 4</h3>
+        <p>Deportistas americanos</p>
+      </div>
+    </section>
+  </div>
+  <!---------------------->
+  <!-- FIN Video Scroll -->
+  <!---------------------->
+
+</main>
 
 <style>
   .header {
@@ -204,26 +212,35 @@
   .headline b {
     display: block;
   }
+  .subtitulo {
+    text-align: center;
+    margin: 50px 0;
+  }
 
   /* Estilos para el scroller */
   .foreground_container {
-    pointer-events: none;
-    padding-left: 50%;
+    position: relative;
+    /* pointer-events: none; */
+    /* padding-left: 50%; */
   }
 
   .step_foreground {
     display: flex;
-    justify-content: end;
-    align-items: center;
+    justify-content: center;
+    align-items: end;
+    max-width: 1280px;
     height: 100vh;
     border: 1px solid rgba(0, 0, 0, 0.4);
     color: white;
     padding: 1em;
-    margin: 0 0 2em 0;
+    /* margin: 0 0 2em 0; */
+    margin: auto;
+    margin-bottom: 2em;
   }
   .epi_foreground {
+    text-align: center;
     padding: 20px;
-    max-width: 150px;
+    min-width: 250px;
     background-color: rgba(0, 0, 0, 0.5);
   }
   .lorem_ipsum {
@@ -231,9 +248,16 @@
     max-width: 740px;
   }
   .image_container {
-    display: flex;
+    position: relative;
     justify-content: center;
     align-items: center;
     height: 100vh;
+  }
+  .charts {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 1s;
   }
 </style>

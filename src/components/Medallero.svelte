@@ -76,8 +76,8 @@ $: {
     align-items: end;
     margin: auto;
     flex-wrap: wrap;
-    max-width: 1000px;
-    gap: 30px;
+    max-width: 600px;
+    gap: 10px;
     margin-bottom: 100px;
   }
   .person-container {
